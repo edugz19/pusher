@@ -1,0 +1,49 @@
+<?php
+  require('chart.php');
+?>
+
+<html>
+  <body>
+    <button><a href="index.php">Comenzar</a></button>
+    <div id="chart_div" style="width: 100%; height: 500px"></div>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://js.pusher.com/7.0.3/pusher.min.js"></script>
+    <script>
+      google.charts.load("current", { packages: ["corechart"] });
+      google.charts.setOnLoadCallback(() => {
+        const dataTable = google.visualization.arrayToDataTable([
+          ["Year", "Price"],
+          [2014, 400],
+          [2017, 600],
+        ]);
+        const chart = new google.visualization.AreaChart(
+          document.getElementById("chart_div")
+        );
+        const options = {
+          title: "1 BTC in USD",
+          hAxis: { title: "Year", titleTextStyle: { color: "#333" } },
+          vAxis: { minValue: 0 },
+          animation: { duration: 100, easing: "out" },
+        };
+        chart.draw(dataTable, options);
+        let year = 2021;
+        Pusher.logToConsole = false;
+
+        const pusher = new Pusher(
+          "7d675295ea5fe6973ac3", // Replace with 'key' from dashboard
+          {
+            cluster: "eu", // Replace with 'cluster' from dashboard
+            forceTLS: true,
+          }
+        );
+        const channel = pusher.subscribe("price-btcusd");
+
+        channel.bind("new-price", (data) => {
+          const row = [year++, data.value];
+          dataTable.addRow(row);
+          chart.draw(dataTable, options);
+        });
+      });
+    </script>
+  </body>
+</html>
